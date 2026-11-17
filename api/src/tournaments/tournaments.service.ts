@@ -12,13 +12,14 @@ import { AddTeamDto } from './dto/add-team.dto';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { ListTournamentsQueryDto } from './dto/list-tournaments-query.dto';
 import { ScheduleDto } from './dto/schedule.dto';
-import { Match, MatchDocument } from './schemas/match.schema';
+import { Match, MatchDocument, MatchStatus } from './schemas/match.schema';
 import { Team, TeamDocument } from './schemas/team.schema';
 import {
   Tournament,
   TournamentDocument,
   TournamentStatus,
 } from './schemas/tournament.schema';
+import { calculateStandings } from './standings';
 
 @Injectable()
 export class TournamentsService {
@@ -160,6 +161,25 @@ export class TournamentsService {
       .lean();
   }
 
+  async getStandings(id: string) {
+    const tournament = await this.getOne(id);
+    const [teams, matches] = await Promise.all([
+      this.teamModel.find({ tournamentId: tournament._id }).lean(),
+      this.matchModel
+        .find({ tournamentId: tournament._id, status: MatchStatus.FINISHED })
+        .lean(),
+    ]);
+    return calculateStandings(
+      teams.map((t) => ({ id: t._id.toString(), name: t.name })),
+      matches.map((m) => ({
+        homeTeamId: m.homeTeamId.toString(),
+        awayTeamId: m.awayTeamId.toString(),
+        homeScore: m.homeScore as number,
+        awayScore: m.awayScore as number,
+      })),
+    );
+  }
+
   private buildRoundRobin(teamIds: Types.ObjectId[]) {
     const list: (Types.ObjectId | null)[] = [...teamIds];
     if (list.length % 2 === 1) list.push(null);
@@ -176,4 +196,3 @@ export class TournamentsService {
     return result;
   }
 }
-

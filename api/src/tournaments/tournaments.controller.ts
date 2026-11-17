@@ -65,4 +65,9 @@ export class TournamentsController {
   matches(@Param('id', ParseObjectIdPipe) id: string) {
     return this.service.getMatches(id);
   }
+
+  @Get(':id/standings')
+  standings(@Param('id', ParseObjectIdPipe) id: string) {
+    return this.service.getStandings(id);
+  }
 }
