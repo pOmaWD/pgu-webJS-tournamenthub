@@ -15,6 +15,10 @@ export class UsersService {
     return this.userModel.findById(id);
   }
 
+  findActiveByIdsAndRole(ids: string[], role: Role) {
+    return this.userModel.find({ _id: { $in: ids }, role, active: true });
+  }
+
   async create(data: {
     displayName: string;
     email: string;
