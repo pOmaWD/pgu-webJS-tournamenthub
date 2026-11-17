@@ -1,20 +1,9 @@
 require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
+const app = require("./app");
+const connectDB = require("./config/database");
 
-const app = express();
-app.use(express.json());
+const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-  res.json({ message: "TournamentHub API is working" });
-});
-
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB connected");
-    app.listen(process.env.PORT || 3000, () =>
-      console.log(`Server: http://localhost:${process.env.PORT || 3000}`)
-    );
-  })
+connectDB()
+  .then(() => app.listen(PORT, () => console.log(`Server: http://localhost:${PORT}`)))
   .catch((err) => console.error("DB error:", err.message));
